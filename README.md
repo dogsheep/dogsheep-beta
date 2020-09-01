@@ -43,6 +43,14 @@ twitter.db:
 
 This will create a `search_index` table in the `dogsheep.db` database populated by data from those SQL queries.
 
+By default the search index that this tool creates will be configured for Porter stemming. This means that searches for words like `run` will match documents containing `runs` or `running`.
+
+If you don't want to use Porter stemming, use the `--tokenize none` option:
+
+    $ dogsheep-beta index dogsheep.db config.yml --tokenize none
+
+You can pass other SQLite tokenize argumenst here, see [the SQLite FTS tokenizers documentation](https://www.sqlite.org/fts5.html#tokenizers).
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:

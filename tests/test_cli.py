@@ -3,6 +3,7 @@ from dogsheep_beta.cli import cli
 import sqlite_utils
 import datetime
 import textwrap
+import pytest
 
 
 def test_version():
@@ -13,7 +14,8 @@ def test_version():
         assert result.output.startswith("cli, version ")
 
 
-def test_basic(tmp_path_factory, monkeypatch):
+@pytest.mark.parametrize("use_porter", [True, False])
+def test_basic(tmp_path_factory, monkeypatch, use_porter):
     db_directory = tmp_path_factory.mktemp("dbs")
     monkeypatch.chdir(db_directory)
     db_path = db_directory / "dogs.db"
@@ -25,10 +27,17 @@ def test_basic(tmp_path_factory, monkeypatch):
             {
                 "id": 1,
                 "name": "Cleo",
+                "likes": "running",
                 "age": 5,
                 "created": "2020-08-22 04:41:33",
             },
-            {"id": 2, "name": "Pancakes", "age": 4, "created": "2020-08-17 11:35:42"},
+            {
+                "id": 2,
+                "name": "Pancakes",
+                "likes": "chasing",
+                "age": 4,
+                "created": "2020-08-17 11:35:42",
+            },
         ],
         pk="id",
     )
@@ -42,7 +51,8 @@ def test_basic(tmp_path_factory, monkeypatch):
                 select
                     id as key,
                     name as title,
-                    created as timestamp
+                    created as timestamp,
+                    likes as search_1
                 from dogs
     """
         ),
@@ -50,7 +60,10 @@ def test_basic(tmp_path_factory, monkeypatch):
     )
 
     runner = CliRunner()
-    result = runner.invoke(cli, ["index", str(beta_path), str(config_path)])
+    args = ["index", str(beta_path), str(config_path)]
+    if not use_porter:
+        args.extend(["--tokenize", "none"])
+    result = runner.invoke(cli, args)
     assert result.exit_code == 0
 
     beta_db = sqlite_utils.Database(beta_path)
@@ -60,7 +73,7 @@ def test_basic(tmp_path_factory, monkeypatch):
             "key": "1",
             "title": "Cleo",
             "timestamp": "2020-08-22 04:41:33",
-            "search_1": None,
+            "search_1": "running",
             "search_2": None,
             "search_3": None,
         },
@@ -69,9 +82,18 @@ def test_basic(tmp_path_factory, monkeypatch):
             "key": "2",
             "title": "Pancakes",
             "timestamp": "2020-08-17 11:35:42",
-            "search_1": None,
+            "search_1": "chasing",
             "search_2": None,
             "search_3": None,
         },
     ]
     assert beta_db["search_index"].indexes[0].columns == ["timestamp"]
+
+    # Test that search works, with porter stemming
+    results = beta_db["search_index"].search("run")
+    if use_porter:
+        assert results == [
+            ("dogs.db/dogs", "1", "Cleo", "2020-08-22 04:41:33", "running", None, None)
+        ]
+    else:
+        assert results == []

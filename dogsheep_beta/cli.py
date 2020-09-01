@@ -19,7 +19,12 @@ def cli():
     type=click.Path(file_okay=True, dir_okay=False, allow_dash=True),
     required=True,
 )
-def index(db_path, config):
+@click.option(
+    "--tokenize",
+    help="Tokenizer to use. Defaults to porter, set to none to disable.",
+    default="porter",
+)
+def index(db_path, config, tokenize):
     "Create a search index based on rules in the config file"
     rules = parse_metadata(open(config).read())
-    run_indexer(db_path, rules)
+    run_indexer(db_path, rules, tokenize=None if tokenize == "none" else tokenize)

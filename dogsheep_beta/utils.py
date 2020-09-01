@@ -3,7 +3,7 @@ import sqlite_utils
 import yaml
 
 
-def run_indexer(db_path, rules):
+def run_indexer(db_path, rules, tokenize="porter"):
     # Ensure table exists
     db = sqlite_utils.Database(db_path)
     if not db["search_index"].exists():
@@ -19,7 +19,9 @@ def run_indexer(db_path, rules):
             },
             pk=("table", "key"),
         )
-        db["search_index"].enable_fts(["title", "search_1"], create_triggers=True)
+        db["search_index"].enable_fts(
+            ["title", "search_1"], create_triggers=True, tokenize=tokenize
+        )
     db["search_index"].create_index(["timestamp"], if_not_exists=True)
     db.conn.close()
 
