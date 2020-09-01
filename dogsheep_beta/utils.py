@@ -31,21 +31,19 @@ def run_indexer(db_path, rules):
             sql = info["sql"]
             # Bit of a hack - we replace the starting `select ` with one
             # that also includes the hard-coded table
-            sql_rest = sql.split('select', 1)[1]
-            sql = "select '{}/{}' as [table],{}".format(
-                db_name, table, sql_rest
-            )
+            sql_rest = sql.split("select", 1)[1]
+            sql = "select '{}/{}' as [table],{}".format(db_name, table, sql_rest)
             columns = derive_columns(other_db, sql)
             with other_db.conn:
-                other_db.conn.execute("REPLACE INTO index1.search_index ({}) {}".format(
-                    ', '.join('[{}]'.format(column) for column in columns),
-                    sql
-                ))
-
+                other_db.conn.execute(
+                    "REPLACE INTO index1.search_index ({}) {}".format(
+                        ", ".join("[{}]".format(column) for column in columns), sql
+                    )
+                )
 
 
 def derive_columns(db, sql):
-    cursor = db.conn.execute(sql + ' limit 0')
+    cursor = db.conn.execute(sql + " limit 0")
     return [r[0] for r in cursor.description]
 
 
