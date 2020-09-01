@@ -1,0 +1,13 @@
+.venv
+Pipfile
+__pycache__/
+*.py[cod]
+*$py.class
+venv
+.eggs
+.pytest_cache
+*.egg-info
+.DS_Store
+.vscode
+*.db
+config.yml

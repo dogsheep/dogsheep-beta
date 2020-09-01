@@ -1,0 +1,1 @@
+from datasette import hookimpl
