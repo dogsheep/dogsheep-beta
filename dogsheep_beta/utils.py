@@ -41,6 +41,13 @@ def run_indexer(db_path, rules):
                         ", ".join("[{}]".format(column) for column in columns), sql
                     )
                 )
+        other_db.conn.close()
+
+    # Run optimize
+    db = sqlite_utils.Database(db_path)
+    with db.conn:
+        db["search_index"].optimize()
+    db.vacuum()
 
 
 def derive_columns(db, sql):
