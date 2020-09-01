@@ -20,6 +20,7 @@ def run_indexer(db_path, rules):
             pk=("table", "key"),
         )
         db["search_index"].enable_fts(["title", "search_1"], create_triggers=True)
+    db["search_index"].create_index(["timestamp"], if_not_exists=True)
     db.conn.close()
 
     # We connect to each database in turn and attach our index

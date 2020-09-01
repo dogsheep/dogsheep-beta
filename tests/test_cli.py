@@ -28,12 +28,7 @@ def test_basic(tmp_path_factory, monkeypatch):
                 "age": 5,
                 "created": "2020-08-22 04:41:33",
             },
-            {
-                "id": 2,
-                "name": "Pancakes",
-                "age": 4,
-                "created": "2020-08-17 11:35:42"
-            },
+            {"id": 2, "name": "Pancakes", "age": 4, "created": "2020-08-17 11:35:42"},
         ],
         pk="id",
     )
@@ -79,3 +74,4 @@ def test_basic(tmp_path_factory, monkeypatch):
             "search_3": None,
         },
     ]
+    assert beta_db["search_index"].indexes[0].columns == ["timestamp"]
