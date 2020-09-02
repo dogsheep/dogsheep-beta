@@ -52,6 +52,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
                     id as key,
                     name as title,
                     created as timestamp,
+                    case name when 'Cleo' then 1 else 2 end as category,
                     likes as search_1
                 from dogs
     """
@@ -67,12 +68,18 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
     assert result.exit_code == 0
 
     beta_db = sqlite_utils.Database(beta_path)
+
+    assert list(beta_db["categories"].rows) == [
+        {"id": 1, "name": "created"},
+        {"id": 2, "name": "saved"},
+    ]
     assert list(beta_db["search_index"].rows) == [
         {
             "table": "dogs.db/dogs",
             "key": "1",
             "title": "Cleo",
             "timestamp": "2020-08-22 04:41:33",
+            "category": 1,
             "search_1": "running",
             "search_2": None,
             "search_3": None,
@@ -82,18 +89,29 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
             "key": "2",
             "title": "Pancakes",
             "timestamp": "2020-08-17 11:35:42",
+            "category": 2,
             "search_1": "chasing",
             "search_2": None,
             "search_3": None,
         },
     ]
-    assert beta_db["search_index"].indexes[0].columns == ["timestamp"]
+    indexes = [i.columns for i in beta_db["search_index"].indexes]
+    assert indexes == [["category"], ["timestamp"], ["table", "key"]]
 
     # Test that search works, with porter stemming
     results = beta_db["search_index"].search("run")
     if use_porter:
         assert results == [
-            ("dogs.db/dogs", "1", "Cleo", "2020-08-22 04:41:33", "running", None, None)
+            (
+                "dogs.db/dogs",
+                "1",
+                "Cleo",
+                "2020-08-22 04:41:33",
+                1,
+                "running",
+                None,
+                None,
+            )
         ]
     else:
         assert results == []

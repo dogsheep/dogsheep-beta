@@ -2,27 +2,23 @@ import json
 import sqlite_utils
 import yaml
 
+COLUMNS = {
+    "table": str,
+    "key": str,
+    "title": str,
+    "timestamp": str,
+    "category": int,
+    "search_1": str,
+    "search_2": str,
+    "search_3": str,
+}
+INDEXES = [("timestamp",), ("category",)]
+FOREIGN_KEYS = [("category", "categories", "id")]
+
 
 def run_indexer(db_path, rules, tokenize="porter"):
-    # Ensure table exists
     db = sqlite_utils.Database(db_path)
-    if not db["search_index"].exists():
-        db["search_index"].create(
-            {
-                "table": str,
-                "key": str,
-                "title": str,
-                "timestamp": str,
-                "search_1": str,
-                "search_2": str,
-                "search_3": str,
-            },
-            pk=("table", "key"),
-        )
-        db["search_index"].enable_fts(
-            ["title", "search_1"], create_triggers=True, tokenize=tokenize
-        )
-    db["search_index"].create_index(["timestamp"], if_not_exists=True)
+    ensure_table_and_indexes(db, tokenize)
     db.conn.close()
 
     # We connect to each database in turn and attach our index
@@ -55,6 +51,34 @@ def run_indexer(db_path, rules, tokenize="porter"):
 def derive_columns(db, sql):
     cursor = db.conn.execute(sql + " limit 0")
     return [r[0] for r in cursor.description]
+
+
+def ensure_table_and_indexes(db, tokenize):
+    if not db["categories"].exists():
+        db["categories"].insert_all(
+            [{"id": 1, "name": "created"}, {"id": 2, "name": "saved"}], pk="id"
+        )
+    table = db["search_index"]
+    if not table.exists():
+        table.create(
+            COLUMNS,
+            pk=("table", "key"),
+        )
+    else:
+        # Ensure all the column exists
+        existing_columns = table.columns_dict.keys()
+        for key, type_ in COLUMNS.items():
+            if key not in existing_columns:
+                table.add_column(key, type_)
+    if not db["search_index_fts"].exists():
+        table.enable_fts(["title", "search_1"], create_triggers=True, tokenize=tokenize)
+    for index in INDEXES:
+        table.create_index(index, if_not_exists=True)
+    for fk in FOREIGN_KEYS:
+        try:
+            table.add_foreign_key(*fk)
+        except sqlite_utils.db.AlterError:
+            pass
 
 
 class BadMetadataError(Exception):

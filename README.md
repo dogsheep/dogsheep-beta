@@ -51,6 +51,27 @@ If you don't want to use Porter stemming, use the `--tokenize none` option:
 
 You can pass other SQLite tokenize argumenst here, see [the SQLite FTS tokenizers documentation](https://www.sqlite.org/fts5.html#tokenizers).
 
+## Columns
+
+The columns that can be returned by our query are:
+
+- `key` - a unique (within that table) primary key
+- `title` - the title for the item
+- `timestamp` - an ISO8601 timestamp, e.g. `2020-09-02T21:00:21`
+- `search_1` - a larger chunk of text to be included in the search index
+- `category` - an integer category ID, see below
+
+## Categories
+
+Indexed items can be assigned a category. Categories are integers that correspond to records in the `categories` table, which defaults to containing the following:
+
+|   id | name    |
+|------|---------|
+|    1 | created |
+|    2 | saved   |
+
+`created` is intended for items that have been created by the Dogsheep instance owner. `saved` is intended for items that they have saved, liked or favourited.
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
