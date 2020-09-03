@@ -1,7 +1,7 @@
 from datasette import hookimpl
 from dogsheep_beta.utils import parse_metadata
 import html
-from urllib.parse import urlencode
+import urllib
 from jinja2 import Template
 import json
 
@@ -95,8 +95,8 @@ async def get_count_and_facets(datasette, database_name, q):
 
     path_with_query_string = "/{}/search_index.json?{}".format(
         database_name,
-        urlencode(
-            {"_search": q, "_facet": ["table", "category"], "_size": 0}, doseq=True
+        urllib.parse.urlencode(
+            {"_search": q, "_facet": ["table", "category", "is_public"], "_size": 0}, doseq=True
         ),
     )
     request = Request.fake(path_with_query_string)
@@ -104,7 +104,20 @@ async def get_count_and_facets(datasette, database_name, q):
     data, _, _ = await view.data(
         request, database=database_name, hash=None, table="search_index", _next=None
     )
-    return data["filtered_table_rows_count"], data["facet_results"]
+    count, facets = data["filtered_table_rows_count"], data["facet_results"]
+    facets = facets.values()
+    # Rewrite toggle_url on facet_results
+    # ../search_index.json?_search=wolf&_facet=table&_facet=category&_facet=is_public&_size=0&category=2
+    for facet in facets:
+        for result in facet["results"]:
+            bits = urllib.parse.urlparse(result["toggle_url"])
+            qs_bits = dict(urllib.parse.parse_qsl(bits.query))
+            to_remove = [k for k in qs_bits if k.startswith("_")]
+            for k in to_remove:
+                qs_bits.pop(k)
+            qs_bits["q"] = q
+            result["toggle_url"] = "?" + urllib.parse.urlencode(qs_bits)
+    return count, facets
 
 
 @hookimpl

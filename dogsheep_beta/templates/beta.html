@@ -8,6 +8,19 @@
     padding: 1em 0;
     border-bottom: 1px solid #666;
 }
+.facet h2 {
+    font-size: 1em;
+}
+.facet .selected {
+    color; red;
+}
+.facet .x:link,
+.facet .x:visited,
+.facet .x:hover,
+.facet .x:focus,
+.facet .x:active {
+    text-decoration: none;
+}
 </style>
 <h1>Dogsheep Beta{% if q %}: {{ q }}{% endif %}</h1>
 
@@ -18,7 +31,25 @@
 
 {% if count %}<p>Got {{ count }} result{% if count != 1 %}s{% endif %}</p>{% endif %}
 
-{{ facets }}
+{% if facets %}
+    {% for facet in facets %}
+        <div class="facet">
+            <h2>{{ facet.name }}</h2>
+            <ul>
+                {% for item in facet.results %}
+                    <li{% if item.selected %} class="selected"{% endif %}>
+                        {% if item.selected %}
+                            {{ item.label }} <a href="{{ item.toggle_url }}" class="x">✖</a>
+                        {% else %}
+                        <a href="{{ item.toggle_url }}">{{ item.label }}</a>
+                        {% endif %}
+                        - {{ item.count }}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endfor %}
+{% endif %}
 
 {% for result in results %}
     <div class="result">
