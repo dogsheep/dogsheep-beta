@@ -1,5 +1,4 @@
 from datasette import hookimpl
-from datasette.utils.asgi import Request, Response
 from dogsheep_beta.utils import parse_metadata
 import html
 from urllib.parse import urlencode
@@ -27,6 +26,8 @@ limit 100
 
 
 async def beta(request, datasette):
+    from datasette.utils.asgi import Response
+
     config = datasette.plugin_config("dogsheep-beta") or {}
     database_name = config.get("database") or datasette.get_database().name
     dogsheep_beta_config_file = config["config_file"]
@@ -81,25 +82,28 @@ async def process_results(datasette, results, rules):
                 compiled[table] = Template(meta["display"])
             output = compiled[table].render(**result)
         else:
-            output = "<pre>{}</pre>".format(html.escape(json.dumps(result, default=repr, indent=4)))
+            output = "<pre>{}</pre>".format(
+                html.escape(json.dumps(result, default=repr, indent=4))
+            )
         result["output"] = output
 
 
 async def get_count_and_facets(datasette, database_name, q):
     from datasette.views.table import TableView
+    from datasette.utils.asgi import Request, Response
+
     path_with_query_string = "/{}/search_index.json?{}".format(
-        database_name, urlencode({
-            "_search": q,
-            "_facet": ["table", "category"],
-            "_size": 0
-        }, doseq=True)
+        database_name,
+        urlencode(
+            {"_search": q, "_facet": ["table", "category"], "_size": 0}, doseq=True
+        ),
     )
     request = Request.fake(path_with_query_string)
     view = TableView(datasette)
     data, _, _ = await view.data(
         request, database=database_name, hash=None, table="search_index", _next=None
     )
-    return data['filtered_table_rows_count'], data['facet_results']
+    return data["filtered_table_rows_count"], data["facet_results"]
 
 
 @hookimpl
