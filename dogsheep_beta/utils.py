@@ -20,6 +20,12 @@ NOT_NULL = {
     "is_public",
 }
 
+CATEGORIES = [
+    {"id": 1, "name": "created"},
+    {"id": 2, "name": "saved"},
+    {"id": 3, "name": "received"},
+]
+
 
 def run_indexer(db_path, rules, tokenize="porter"):
     db = sqlite_utils.Database(db_path)
@@ -59,10 +65,7 @@ def derive_columns(db, sql):
 
 
 def ensure_table_and_indexes(db, tokenize):
-    if not db["categories"].exists():
-        db["categories"].insert_all(
-            [{"id": 1, "name": "created"}, {"id": 2, "name": "saved"}], pk="id"
-        )
+    db["categories"].insert_all(CATEGORIES, pk="id", replace=True)
     table = db["search_index"]
     if not table.exists():
         table.create(

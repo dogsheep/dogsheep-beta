@@ -68,12 +68,17 @@ Public records are things like your public tweets, blog posts and GitHub commits
 
 Indexed items can be assigned a category. Categories are integers that correspond to records in the `categories` table, which defaults to containing the following:
 
-|   id | name    |
-|------|---------|
-|    1 | created |
-|    2 | saved   |
+|   id | name       |
+|------|------------|
+|    1 | created    |
+|    2 | saved      |
+|    3 | received   |
 
-`created` is intended for items that have been created by the Dogsheep instance owner. `saved` is intended for items that they have saved, liked or favourited.
+`created` is for items that have been created by the Dogsheep instance owner.
+
+`saved` is for items that they have saved, liked or favourited.
+
+`received` is for items that have been specifically sent to them by other people - incoming emails or direct messages for example.
 
 ## Development
 

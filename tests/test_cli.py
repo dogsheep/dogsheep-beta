@@ -72,6 +72,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
     assert list(beta_db["categories"].rows) == [
         {"id": 1, "name": "created"},
         {"id": 2, "name": "saved"},
+        {"id": 3, "name": "received"},
     ]
     assert list(beta_db["search_index"].rows) == [
         {
