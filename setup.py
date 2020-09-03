@@ -27,6 +27,7 @@ setup(
     license="Apache License, Version 2.0",
     version=VERSION,
     packages=["dogsheep_beta"],
+    package_data={"dogsheep_beta": ["templates/*.html"]},
     entry_points={
         "datasette": ["beta = dogsheep_beta"],
         "console_scripts": ["dogsheep-beta = dogsheep_beta.cli:cli"],

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Dogsheep Beta{% if q %}: {{ q }}{% endif %}{% endblock %}
+
+{% block content %}
+<style>
+.result {
+    padding: 1em 0;
+    border-bottom: 1px solid #666;
+}
+</style>
+<h1>Dogsheep Beta{% if q %}: {{ q }}{% endif %}</h1>
+
+<form action="/-/beta" method="get">
+    <input type="search" name="q" value="{{ q }}" id="q">
+    <input type="submit" value="Search">
+</form>
+
+{% if count %}<p>Got {{ count }} results</p>{% endif %}
+
+{{ facets }}
+
+{% for result in results %}
+    <div class="result">
+        {{ result.output|safe }}
+    </div>
+{% endfor %}
+
+{% endblock %}
