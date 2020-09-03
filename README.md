@@ -80,6 +80,57 @@ Indexed items can be assigned a category. Categories are integers that correspon
 
 `received` is for items that have been specifically sent to them by other people - incoming emails or direct messages for example.
 
+## Custom results display
+
+Each indexed item type can define custom display HTML as part of the `config.yml` file. It can do this using a `display` key containing a fragment of Jinja template, and optionally a `display_sql` key with extra SQL to execute to fetch the data to display.
+
+Here's how to define a custom display template for a tweet:
+
+```yaml
+twitter.db:
+    tweets:
+        sql: |-
+            select
+                tweets.id as key,
+                'Tweet by @' || users.screen_name as title,
+                tweets.created_at as timestamp,
+                tweets.full_text as search_1
+            from tweets join users on tweets.user = users.id
+        display: |-
+            <p>{{ title }} - tweeted at {{ timestamp }}</p>
+            <blockquote>{{ search_1 }}</blockquote>
+```
+This example reuses the value that were stored in the `search_index` table when the indexing query was run.
+
+To load in extra values to display in the template, use a `display_sql` query like this:
+
+```yaml
+twitter.db:
+    tweets:
+        sql: |-
+            select
+                tweets.id as key,
+                'Tweet by @' || users.screen_name as title,
+                tweets.created_at as timestamp,
+                tweets.full_text as search_1
+            from tweets join users on tweets.user = users.id
+        display_sql: |-
+            select
+                users.screen_name,
+                tweets.full_text,
+                tweets.created_at
+            from
+                tweets join users on tweets.user = users.id
+            where
+                tweets.id = :key
+        display: |-
+            <p>{{ display.screen_name }} - tweeted at {{ display.created_at }}</p>
+            <blockquote>{{ display.full_text }}</blockquote>
+```
+The `display_sql` query will be executed for every search result, passing the key value from the `search_index` table as the `:key` parameter.
+
+This performs well because [many small queries are efficient in SQLite](https://www.sqlite.org/np1queryprob.html).
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
