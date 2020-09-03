@@ -12,6 +12,7 @@ async def test_search(ds):
     async with httpx.AsyncClient(app=ds.app()) as client:
         response = await client.get("http://localhost/-/beta")
         assert 200 == response.status_code
+        assert '<input type="search" name="q" value="" id="q">' in response.text
         response = await client.get("http://localhost/-/beta?q=tests")
         assert 200 == response.status_code
         assert "<p>Got 1 result</p>" in response.text

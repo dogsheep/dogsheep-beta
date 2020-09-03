@@ -44,7 +44,7 @@ async def beta(request, datasette):
         await datasette.render_template(
             "beta.html",
             {
-                "q": q,
+                "q": q or "",
                 "count": count,
                 "results": results,
                 "facets": facets,
