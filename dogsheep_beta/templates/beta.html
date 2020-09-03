@@ -11,9 +11,6 @@
 .facet h2 {
     font-size: 1em;
 }
-.facet .selected {
-    color; red;
-}
 .facet .x:link,
 .facet .x:visited,
 .facet .x:hover,
@@ -21,16 +18,34 @@
 .facet .x:active {
     text-decoration: none;
 }
+.facet .label {
+    word-wrap: break-word;
+}
+aside {
+    float: right;
+    width: 30%;
+}
+section.results {
+    margin-right: 30%;
+    padding-right: 2em;
+}
+pre {
+    white-space: pre-wrap;
+}
 </style>
 <h1>Dogsheep Beta{% if q %}: {{ q }}{% endif %}</h1>
 
-<form action="/-/beta" method="get">
+<form action="/-/beta" method="get"><div>
     <input type="search" name="q" value="{{ q }}" id="q">
     <input type="submit" value="Search">
-</form>
+    {% for hidden in hiddens %}
+        <input type="hidden" name="{{ hidden.name }}" value="{{ hidden.value }}">
+    {% endfor %}
+</div></form>
 
-{% if count %}<p>Got {{ count }} result{% if count != 1 %}s{% endif %}</p>{% endif %}
+{% if count %}<p>Got {{ intcomma(count) }} result{% if count != 1 %}s{% endif %}</p>{% endif %}
 
+<aside>
 {% if facets %}
     {% for facet in facets %}
         <div class="facet">
@@ -39,22 +54,25 @@
                 {% for item in facet.results %}
                     <li{% if item.selected %} class="selected"{% endif %}>
                         {% if item.selected %}
-                            {{ item.label }} <a href="{{ item.toggle_url }}" class="x">✖</a>
+                            <span class="label">{{ item.label }}</span> <a href="{{ item.toggle_url }}" class="x">✖</a>
                         {% else %}
-                        <a href="{{ item.toggle_url }}">{{ item.label }}</a>
+                        <a href="{{ item.toggle_url }}" class="label">{{ item.label }}</a>
                         {% endif %}
-                        - {{ item.count }}
+                        - <span class="count">{{ intcomma(item.count) }}</span>
                     </li>
                 {% endfor %}
             </ul>
         </div>
     {% endfor %}
 {% endif %}
+</aside>
 
+<section class="results">
 {% for result in results %}
     <div class="result">
         {{ result.output|safe }}
     </div>
 {% endfor %}
+</section>
 
 {% endblock %}

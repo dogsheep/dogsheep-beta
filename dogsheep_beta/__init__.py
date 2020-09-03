@@ -5,6 +5,24 @@ import urllib
 from jinja2 import Template
 import json
 
+TIMELINE_SQL = """
+select
+  search_index.rowid,
+  search_index.[table],
+  search_index.key,
+  search_index.title,
+  search_index.category,
+  search_index.timestamp,
+  search_index.search_1
+from
+  search_index
+{where}
+  {where_clauses}
+order by
+  search_index.timestamp desc
+limit 100
+"""
+
 SEARCH_SQL = """
 select
   search_index_fts.rank,
@@ -17,12 +35,13 @@ select
   search_index.search_1
 from
   search_index join search_index_fts on search_index.rowid = search_index_fts.rowid
-where
-  search_index_fts match :query
+{where}
+  {where_clauses}
 order by
   search_index_fts.rank, search_index.timestamp desc
 limit 100
 """
+FILTER_COLS = ("table", "category", "is_public")
 
 
 async def beta(request, datasette):
@@ -32,14 +51,20 @@ async def beta(request, datasette):
     database_name = config.get("database") or datasette.get_database().name
     dogsheep_beta_config_file = config["config_file"]
     rules = parse_metadata(open(dogsheep_beta_config_file).read())
-    q = request.args.get("q")
+    q = request.args.get("q") or ""
     results = []
     facets = {}
     count = None
-    if q:
-        results = await search(datasette, database_name, q)
-        count, facets = await get_count_and_facets(datasette, database_name, q)
-        await process_results(datasette, results, rules)
+
+    results = await search(datasette, database_name, request)
+    count, facets = await get_count_and_facets(datasette, database_name, request)
+    await process_results(datasette, results, rules)
+
+    hiddens = [
+        {"name": column, "value": request.args[column]}
+        for column in FILTER_COLS
+        if column in request.args
+    ]
     return Response.html(
         await datasette.render_template(
             "beta.html",
@@ -48,15 +73,31 @@ async def beta(request, datasette):
                 "count": count,
                 "results": results,
                 "facets": facets,
+                "hiddens": hiddens,
             },
             request=request,
         )
     )
 
 
-async def search(datasette, database_name, query):
+async def search(datasette, database_name, request):
     database = datasette.get_database(database_name)
-    results = await database.execute(SEARCH_SQL, {"query": query})
+    q = request.args.get("q") or ""
+    params = {"query": q}
+    where_clauses = []
+    sql = TIMELINE_SQL
+    if q:
+        sql = SEARCH_SQL
+        where_clauses.append("search_index_fts match :query ")
+    for arg in FILTER_COLS:
+        if arg in request.args:
+            where_clauses.append("[{arg}]=:{arg}".format(arg=arg))
+            params[arg] = request.args[arg]
+    sql_to_execute = sql.format(
+        where=" where " if where_clauses else "",
+        where_clauses=" and ".join(where_clauses),
+    )
+    results = await database.execute(sql_to_execute, params)
     return [dict(r) for r in results.rows]
 
 
@@ -76,7 +117,11 @@ async def process_results(datasette, results, rules):
             display_results = await db.execute(
                 meta["display_sql"], {"key": result["key"]}
             )
-            result["display"] = dict(display_results.first())
+            first = display_results.first()
+            if first:
+                result["display"] = dict(first)
+            else:
+                result["display"] = {}
         output = None
         if meta.get("display"):
             if table not in compiled:
@@ -89,14 +134,26 @@ async def process_results(datasette, results, rules):
         result["output"] = output
 
 
-async def get_count_and_facets(datasette, database_name, q):
+async def get_count_and_facets(datasette, database_name, request):
     from datasette.views.table import TableView
     from datasette.utils.asgi import Request, Response
+
+    q = request.args.get("q") or ""
+    args = {
+        "_facet": ["table", "category", "is_public"],
+        "_size": 0,
+    }
+    if q:
+        args["_search"] = q
+    for column in FILTER_COLS:
+        if column in request.args:
+            args[column] = request.args[column]
 
     path_with_query_string = "/{}/search_index.json?{}".format(
         database_name,
         urllib.parse.urlencode(
-            {"_search": q, "_facet": ["table", "category", "is_public"], "_size": 0}, doseq=True
+            args,
+            doseq=True,
         ),
     )
     request = Request.fake(path_with_query_string)
@@ -123,3 +180,8 @@ async def get_count_and_facets(datasette, database_name, q):
 @hookimpl
 def register_routes():
     return [("/-/beta", beta)]
+
+
+@hookimpl
+def extra_template_vars():
+    return {"intcomma": lambda s: "{:,}".format(int(s))}

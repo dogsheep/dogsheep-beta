@@ -1,4 +1,5 @@
 from datasette.app import Datasette
+from bs4 import BeautifulSoup as Soup
 from dogsheep_beta.cli import index
 from dogsheep_beta.utils import parse_metadata
 import textwrap
@@ -13,13 +14,80 @@ async def test_search(ds):
         response = await client.get("http://localhost/-/beta")
         assert 200 == response.status_code
         assert '<input type="search" name="q" value="" id="q">' in response.text
-        response = await client.get("http://localhost/-/beta?q=tests")
+        response = await client.get("http://localhost/-/beta?q=things")
         assert 200 == response.status_code
-        assert "<p>Got 1 result</p>" in response.text
-        assert (
-            "<p>Commit to dogsheep/dogsheep-beta on 2020-08-02T12:35:48</p>"
-            in response.text
-        )
+        for fragment in (
+            "<p>Got 3 results</p>",
+            "<p>Email from blah@example.com, subject Hey there",
+            "<p>Email from blah@example.com, subject What's going on",
+            "<p>Commit to dogsheep/dogsheep-beta on 2020-08-01T00:05:02",
+        ):
+            assert fragment in response.text
+        # Test facets
+        soup = Soup(response.text, "html5lib")
+        facet_els = soup.select(".facet")
+        facets = [
+            {
+                "name": el.find("h2").text,
+                "values": [
+                    {
+                        "selected": "selected" in li.get("class", ""),
+                        "count": int(li.select(".count")[0].text),
+                        "url": li.find("a")["href"],
+                        "label": li.select(".label")[0].text,
+                    }
+                    for li in el.findAll("li")
+                ],
+            }
+            for el in facet_els
+        ]
+        assert facets == [
+            {
+                "name": "table",
+                "values": [
+                    {
+                        "selected": False,
+                        "count": 2,
+                        "url": "?table=emails.db%2Femails&q=things",
+                        "label": "emails.db/emails",
+                    },
+                    {
+                        "selected": False,
+                        "count": 1,
+                        "url": "?table=github.db%2Fcommits&q=things",
+                        "label": "github.db/commits",
+                    },
+                ],
+            },
+            {
+                "name": "category",
+                "values": [
+                    {
+                        "selected": False,
+                        "count": 1,
+                        "url": "?category=1&q=things",
+                        "label": "created",
+                    }
+                ],
+            },
+            {
+                "name": "is_public",
+                "values": [
+                    {
+                        "selected": False,
+                        "count": 2,
+                        "url": "?is_public=0&q=things",
+                        "label": "0",
+                    },
+                    {
+                        "selected": False,
+                        "count": 1,
+                        "url": "?is_public=1&q=things",
+                        "label": "1",
+                    },
+                ],
+            },
+        ]
 
 
 @pytest.mark.asyncio
@@ -55,7 +123,7 @@ def ds(tmp_path_factory, monkeypatch):
     emails.db:
         emails:
             display_sql: |-
-                select * from email where id = :key
+                select * from emails where id = :key
             display: |-
                 <p>Email from {{ display.from_ }}, subject {{ display.subject }}
             sql: |-
@@ -108,7 +176,7 @@ def ds(tmp_path_factory, monkeypatch):
         [
             {
                 "sha": "a5b39c5049b28997528bb0eca52730ab6febabeaba54cfcba0ab5d70e7207523",
-                "message": "Another commit",
+                "message": "Another commit to things",
                 "repo_name": "dogsheep/dogsheep-beta",
                 "committer_date": "2020-08-01T00:05:02",
             },
