@@ -35,6 +35,7 @@ async def beta(request, datasette):
     q = request.args.get("q")
     results = []
     facets = {}
+    count = None
     if q:
         results = await search(datasette, database_name, q)
         count, facets = await get_count_and_facets(datasette, database_name, q)

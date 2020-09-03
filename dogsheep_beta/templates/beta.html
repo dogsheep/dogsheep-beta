@@ -16,7 +16,7 @@
     <input type="submit" value="Search">
 </form>
 
-{% if count %}<p>Got {{ count }} results</p>{% endif %}
+{% if count %}<p>Got {{ count }} result{% if count != 1 %}s{% endif %}</p>{% endif %}
 
 {{ facets }}
 

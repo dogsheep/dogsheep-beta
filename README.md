@@ -60,6 +60,9 @@ The columns that can be returned by our query are:
 - `timestamp` - an ISO8601 timestamp, e.g. `2020-09-02T21:00:21`
 - `search_1` - a larger chunk of text to be included in the search index
 - `category` - an integer category ID, see below
+- `is_public` - an integer (0 or 1, defaults to 0 if not set) specifying if this is public or not
+
+Public records are things like your public tweets, blog posts and GitHub commits.
 
 ## Categories
 

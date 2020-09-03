@@ -8,12 +8,17 @@ COLUMNS = {
     "title": str,
     "timestamp": str,
     "category": int,
+    "is_public": int,
     "search_1": str,
     "search_2": str,
     "search_3": str,
 }
-INDEXES = [("timestamp",), ("category",)]
+INDEXES = [("timestamp",), ("category",), ("is_public",)]
 FOREIGN_KEYS = [("category", "categories", "id")]
+DEFAULTS = {"is_public": 0}
+NOT_NULL = {
+    "is_public",
+}
 
 
 def run_indexer(db_path, rules, tokenize="porter"):
@@ -63,13 +68,15 @@ def ensure_table_and_indexes(db, tokenize):
         table.create(
             COLUMNS,
             pk=("table", "key"),
+            not_null=NOT_NULL,
+            defaults=DEFAULTS,
         )
     else:
         # Ensure all the column exists
         existing_columns = table.columns_dict.keys()
         for key, type_ in COLUMNS.items():
             if key not in existing_columns:
-                table.add_column(key, type_)
+                table.add_column(key, type_, not_null_default=DEFAULTS.get(key))
     if not db["search_index_fts"].exists():
         table.enable_fts(["title", "search_1"], create_triggers=True, tokenize=tokenize)
     for index in INDEXES:

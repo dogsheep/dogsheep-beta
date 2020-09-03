@@ -80,6 +80,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
             "title": "Cleo",
             "timestamp": "2020-08-22 04:41:33",
             "category": 1,
+            "is_public": 0,
             "search_1": "running",
             "search_2": None,
             "search_3": None,
@@ -90,13 +91,14 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
             "title": "Pancakes",
             "timestamp": "2020-08-17 11:35:42",
             "category": 2,
+            "is_public": 0,
             "search_1": "chasing",
             "search_2": None,
             "search_3": None,
         },
     ]
     indexes = [i.columns for i in beta_db["search_index"].indexes]
-    assert indexes == [["category"], ["timestamp"], ["table", "key"]]
+    assert indexes == [["is_public"], ["category"], ["timestamp"], ["table", "key"]]
 
     # Test that search works, with porter stemming
     results = beta_db["search_index"].search("run")
@@ -108,6 +110,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
                 "Cleo",
                 "2020-08-22 04:41:33",
                 1,
+                0,
                 "running",
                 None,
                 None,
