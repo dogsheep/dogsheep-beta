@@ -69,7 +69,7 @@ pre {
 
 <section class="results">
 {% for result in results %}
-    <div class="result">
+    <div class="result" data-table-key="{{ result.table }}:{{ result.key }}">
         {{ result.output|safe }}
     </div>
 {% endfor %}

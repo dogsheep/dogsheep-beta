@@ -145,6 +145,7 @@ async def get_count_and_facets(datasette, database_name, request):
     }
     if q:
         args["_search"] = q
+        args["_searchmode"] = "raw"
     for column in FILTER_COLS:
         if column in request.args:
             args[column] = request.args[column]

@@ -5,6 +5,7 @@ from dogsheep_beta.utils import parse_metadata
 import textwrap
 import sqlite_utils
 import pytest
+import urllib
 import httpx
 
 
@@ -88,6 +89,30 @@ async def test_search(ds):
                 ],
             },
         ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "q,expected",
+    (
+        (
+            "things NOT email",
+            [
+                "github.db/commits:a5b39c5049b28997528bb0eca52730ab6febabeaba54cfcba0ab5d70e7207523"
+            ],
+        ),
+    ),
+)
+async def test_advanced_search(ds, q, expected):
+    async with httpx.AsyncClient(app=ds.app()) as client:
+        response = await client.get(
+            "http://localhost/-/beta?" + urllib.parse.urlencode({"q": q})
+        )
+        soup = Soup(response.text, "html5lib")
+        results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
+        assert results == expected
+        # Check that facets exist on the page
+        assert len(soup.select(".facet li")), "Could not see any facet results"
 
 
 @pytest.mark.asyncio
