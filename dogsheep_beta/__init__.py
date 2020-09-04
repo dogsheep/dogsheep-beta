@@ -20,7 +20,7 @@ from
   {where_clauses}
 order by
   search_index.timestamp desc
-limit 100
+limit 40
 """
 
 SEARCH_SQL = """

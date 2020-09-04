@@ -29,7 +29,7 @@ section.results {
     margin-right: 30%;
     padding-right: 2em;
 }
-pre {
+pre, blockquote {
     white-space: pre-wrap;
 }
 </style>
@@ -75,4 +75,58 @@ pre {
 {% endfor %}
 </section>
 
+<script>
+/* If we find any data-map-latitude attrs, load Leaflet and turn those into maps */
+function loadLeaflet(callback) {
+    let loaded = [];
+    function hasLoaded() {
+        loaded.push(this);
+        if (loaded.length == 2) {
+            callback();
+        }
+    }
+    let stylesheet = document.createElement('link');
+    stylesheet.setAttribute('type', 'text/css');
+    stylesheet.setAttribute('rel', 'stylesheet');
+    stylesheet.setAttribute('href', 'https://unpkg.com/leaflet@1.5.1/dist/leaflet.css');
+    stylesheet.setAttribute('integrity', 'sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==');
+    stylesheet.setAttribute('crossorigin', 'anonymous');
+    stylesheet.onload = hasLoaded;
+    document.head.appendChild(stylesheet);
+    let script = document.createElement('script');
+    script.src = 'https://unpkg.com/leaflet@1.5.1/dist/leaflet.js';
+    script.setAttribute('integrity', 'sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==');
+    script.setAttribute('crossorigin', 'anonymous');
+    script.onload = stylesheet.onload = hasLoaded;
+    document.head.appendChild(script);
+};
+function loadMaps() {
+    const mapEls = document.querySelectorAll('[data-map-latitude]');
+    if (!mapEls.length) {
+        return;
+    }
+    loadLeaflet(() => {
+        console.log('leaded')
+        const attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+        const tilesUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        Array.from(mapEls).forEach((el) => {
+            el.style.display = 'block';
+            const latitude = el.getAttribute('data-map-latitude');
+            const longitude = el.getAttribute('data-map-longitude');
+            const zoom = el.getAttribute('data-map-zoom') || 12;
+            const latlng = L.latLng(latitude, longitude);
+            let map = L.map(el, {layers: [L.tileLayer(tilesUrl, {
+                maxZoom: 19,
+                detectRetina: true,
+                attribution: attribution
+            })]});
+            L.marker(latlng).addTo(map);
+            map.setView(latlng, zoom);
+            window.lastMap = map;
+            window.lastLatLng = latlng;
+        });
+    });
+}
+loadMaps();
+</script>
 {% endblock %}

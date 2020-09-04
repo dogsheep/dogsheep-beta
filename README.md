@@ -131,6 +131,21 @@ The `display_sql` query will be executed for every search result, passing the ke
 
 This performs well because [many small queries are efficient in SQLite](https://www.sqlite.org/np1queryprob.html).
 
+## Displaying maps
+
+This plugin will eventually include a number of useful shortcuts for rendering interesting content.
+
+The first available shortcut is for displaying maps. Make your custom content output something like this:
+
+```html
+<div
+    data-map-latitude="{{ display.latitude }}"
+    data-map-longitude="{{ display.longitude }}"
+    style="display: none; float: right; width: 250px; height: 200px; background-color: #ccc;"
+></div>
+```
+JavaScript on the page will look for any elements with `data-map-latitude` and `data-map-longitude` and, if it finds any, will load Leaflet and convert those elements into maps centered on that location. The default zoom level will be 12, or you can set a `data-map-zoom` attribute to customize this.
+
 ## Development
 
 To set up this plugin locally, first checkout the code. Then create a new virtual environment:
