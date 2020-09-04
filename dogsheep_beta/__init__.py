@@ -126,7 +126,7 @@ async def process_results(datasette, results, rules):
         if meta.get("display"):
             if table not in compiled:
                 compiled[table] = Template(meta["display"])
-            output = compiled[table].render(**result)
+            output = compiled[table].render({**result, **{"json": json}})
         else:
             output = "<pre>{}</pre>".format(
                 html.escape(json.dumps(result, default=repr, indent=4))
