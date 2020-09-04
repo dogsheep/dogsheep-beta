@@ -51,9 +51,10 @@ pre, blockquote {
 <aside>
 {% if facets %}
     {% for facet in facets %}
-        <div class="facet">
-            <h2>{{ facet.name }}</h2>
-            <ul>
+        {% if facet.results %}
+            <div class="facet">
+                <h2>{{ facet.name }}</h2>
+                <ul>
                 {% for item in facet.results %}
                     <li{% if item.selected %} class="selected"{% endif %}>
                         {% if item.selected %}
@@ -64,8 +65,9 @@ pre, blockquote {
                         - <span class="count">{{ intcomma(item.count) }}</span>
                     </li>
                 {% endfor %}
-            </ul>
-        </div>
+                </ul>
+            </div>
+        {% endif %}
     {% endfor %}
 {% endif %}
 </aside>
