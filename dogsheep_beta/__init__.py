@@ -81,6 +81,8 @@ async def beta(request, datasette):
 
 
 async def search(datasette, database_name, request):
+    from datasette.utils import sqlite3, escape_fts
+
     database = datasette.get_database(database_name)
     q = request.args.get("q") or ""
     params = {"query": q}
@@ -97,7 +99,14 @@ async def search(datasette, database_name, request):
         where=" where " if where_clauses else "",
         where_clauses=" and ".join(where_clauses),
     )
-    results = await database.execute(sql_to_execute, params)
+    try:
+        results = await database.execute(sql_to_execute, params)
+    except sqlite3.OperationalError as e:
+        if "fts5" in str(e):
+            params["query"] = escape_fts(params["query"])
+            results = await database.execute(sql_to_execute, params)
+        else:
+            raise
     return [dict(r) for r in results.rows]
 
 
@@ -137,32 +146,50 @@ async def process_results(datasette, results, rules):
 async def get_count_and_facets(datasette, database_name, request):
     from datasette.views.table import TableView
     from datasette.utils.asgi import Request, Response
+    from datasette.utils import sqlite3, escape_fts
 
     q = request.args.get("q") or ""
-    args = {
-        "_facet": ["table", "category", "is_public"],
-        "_size": 0,
-    }
-    if q:
-        args["_search"] = q
-        args["_searchmode"] = "raw"
-    for column in FILTER_COLS:
-        if column in request.args:
-            args[column] = request.args[column]
 
-    path_with_query_string = "/{}/search_index.json?{}".format(
-        database_name,
-        urllib.parse.urlencode(
-            args,
-            doseq=True,
-        ),
-    )
-    request = Request.fake(path_with_query_string)
-    view = TableView(datasette)
-    data, _, _ = await view.data(
-        request, database=database_name, hash=None, table="search_index", _next=None
-    )
-    count, facets = data["filtered_table_rows_count"], data["facet_results"]
+    async def execute_search(searchmode_raw):
+        args = {
+            "_facet": ["table", "category", "is_public"],
+            "_size": 0,
+        }
+        if q:
+            args["_search"] = q
+            if searchmode_raw:
+                args["_searchmode"] = "raw"
+        for column in FILTER_COLS:
+            if column in request.args:
+                args[column] = request.args[column]
+
+        path_with_query_string = "/{}/search_index.json?{}".format(
+            database_name,
+            urllib.parse.urlencode(
+                args,
+                doseq=True,
+            ),
+        )
+        inner_request = Request.fake(path_with_query_string)
+        view = TableView(datasette)
+        data, _, _ = await view.data(
+            inner_request,
+            database=database_name,
+            hash=None,
+            table="search_index",
+            _next=None,
+        )
+        count, facets = data["filtered_table_rows_count"], data["facet_results"]
+        return count, facets
+
+    try:
+        count, facets = await execute_search(True)
+    except sqlite3.OperationalError as e:
+        if "fts5" in str(e):
+            count, facets = await execute_search(False)
+        else:
+            raise
+
     facets = facets.values()
     # Rewrite toggle_url on facet_results
     # ../search_index.json?_search=wolf&_facet=table&_facet=category&_facet=is_public&_size=0&category=2

@@ -101,6 +101,10 @@ async def test_search(ds):
                 "github.db/commits:a5b39c5049b28997528bb0eca52730ab6febabeaba54cfcba0ab5d70e7207523"
             ],
         ),
+        (
+            "#dogfest",
+            ["emails.db/emails:1"],
+        ),
     ),
 )
 async def test_advanced_search(ds, q, expected):
@@ -108,6 +112,7 @@ async def test_advanced_search(ds, q, expected):
         response = await client.get(
             "http://localhost/-/beta?" + urllib.parse.urlencode({"q": q})
         )
+        assert response.status_code == 200
         soup = Soup(response.text, "html5lib")
         results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
         assert results == expected
@@ -219,7 +224,7 @@ def ds(tmp_path_factory, monkeypatch):
         [
             {
                 "id": 1,
-                "subject": "Hey there",
+                "subject": "Hey there #dogfest",
                 "body": "An email about things",
                 "from_": "blah@example.com",
                 "date": "2020-08-01T00:05:02",
