@@ -27,13 +27,15 @@ CATEGORIES = [
 ]
 
 
-def run_indexer(db_path, rules, tokenize="porter"):
+def run_indexer(db_path, rules, tokenize="porter", databases=None):
     db = sqlite_utils.Database(db_path)
     ensure_table_and_indexes(db, tokenize)
     db.conn.close()
 
     # We connect to each database in turn and attach our index
     for i, (db_name, table_rules) in enumerate(rules.items()):
+        if databases and db_name not in databases:
+            continue
         other_db = sqlite_utils.Database(db_name)
         other_db.conn.execute("ATTACH DATABASE '{}' AS index1".format(db_path))
         for table, info in table_rules.items():

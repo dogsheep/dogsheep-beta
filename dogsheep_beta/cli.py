@@ -24,7 +24,18 @@ def cli():
     help="Tokenizer to use. Defaults to porter, set to none to disable.",
     default="porter",
 )
-def index(db_path, config, tokenize):
+@click.option(
+    "-d",
+    "--database",
+    multiple=True,
+    help="Databases to index - defaults to all",
+)
+def index(db_path, config, tokenize, database):
     "Create a search index based on rules in the config file"
     rules = parse_metadata(open(config).read())
-    run_indexer(db_path, rules, tokenize=None if tokenize == "none" else tokenize)
+    run_indexer(
+        db_path,
+        rules,
+        tokenize=None if tokenize == "none" else tokenize,
+        databases=database,
+    )
