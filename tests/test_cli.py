@@ -76,7 +76,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
     ]
     assert list(beta_db["search_index"].rows) == [
         {
-            "table": "dogs.db/dogs",
+            "type": "dogs.db/dogs",
             "key": "1",
             "title": "Cleo",
             "timestamp": "2020-08-22 04:41:33",
@@ -87,7 +87,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
             "search_3": None,
         },
         {
-            "table": "dogs.db/dogs",
+            "type": "dogs.db/dogs",
             "key": "2",
             "title": "Pancakes",
             "timestamp": "2020-08-17 11:35:42",
@@ -99,7 +99,7 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
         },
     ]
     indexes = [i.columns for i in beta_db["search_index"].indexes]
-    assert indexes == [["is_public"], ["category"], ["timestamp"], ["table", "key"]]
+    assert indexes == [["is_public"], ["category"], ["timestamp"], ["type", "key"]]
 
     # Test that search works, with porter stemming
     results = beta_db["search_index"].search("run")

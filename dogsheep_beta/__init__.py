@@ -8,7 +8,7 @@ import json
 TIMELINE_SQL = """
 select
   search_index.rowid,
-  search_index.[table],
+  search_index.type,
   search_index.key,
   search_index.title,
   search_index.category,
@@ -27,7 +27,7 @@ SEARCH_SQL = """
 select
   search_index_fts.rank,
   search_index.rowid,
-  search_index.[table],
+  search_index.type,
   search_index.key,
   search_index.title,
   search_index.category,
@@ -41,7 +41,7 @@ order by
   search_index_fts.rank, search_index.timestamp desc
 limit 100
 """
-FILTER_COLS = ("table", "category", "is_public")
+FILTER_COLS = ("type", "category", "is_public")
 
 
 async def beta(request, datasette):
@@ -112,17 +112,17 @@ async def search(datasette, database_name, request):
 
 async def process_results(datasette, results, rules):
     # Adds a 'display' property with HTML to the results
-    compiled = {}
-    rules_by_table = {}
-    for db_name, tables in rules.items():
-        for table, meta in tables.items():
-            rules_by_table["{}/{}".format(db_name, table)] = meta
+    templates_by_type = {}
+    rules_by_type = {}
+    for db_name, types in rules.items():
+        for type_, meta in types.items():
+            rules_by_type["{}/{}".format(db_name, type_)] = meta
 
     for result in results:
-        table = result["table"]
-        meta = rules_by_table[table]
+        type_ = result["type"]
+        meta = rules_by_type[type_]
         if meta.get("display_sql"):
-            db = datasette.get_database(table.split(".")[0])
+            db = datasette.get_database(type_.split(".")[0])
             display_results = await db.execute(
                 meta["display_sql"], {"key": result["key"]}
             )
@@ -133,9 +133,10 @@ async def process_results(datasette, results, rules):
                 result["display"] = {}
         output = None
         if meta.get("display"):
-            if table not in compiled:
-                compiled[table] = Template(meta["display"])
-            output = compiled[table].render({**result, **{"json": json}})
+            if type_ not in templates_by_type:
+                compiled = Template(meta["display"])
+                templates_by_type[type_] = compiled
+            output = compiled.render({**result, **{"json": json}})
         else:
             output = "<pre>{}</pre>".format(
                 html.escape(json.dumps(result, default=repr, indent=4))
@@ -152,7 +153,7 @@ async def get_count_and_facets(datasette, database_name, request):
 
     async def execute_search(searchmode_raw):
         args = {
-            "_facet": ["table", "category", "is_public"],
+            "_facet": ["type", "category", "is_public"],
             "_size": 0,
         }
         if q:
@@ -192,7 +193,7 @@ async def get_count_and_facets(datasette, database_name, request):
 
     facets = facets.values()
     # Rewrite toggle_url on facet_results
-    # ../search_index.json?_search=wolf&_facet=table&_facet=category&_facet=is_public&_size=0&category=2
+    # ../search_index.json?_search=wolf&_facet=type&_facet=category&_facet=is_public&_size=0&category=2
     for facet in facets:
         for result in facet["results"]:
             bits = urllib.parse.urlparse(result["toggle_url"])

@@ -19,7 +19,7 @@ Run the indexer using the `dogsheep-beta` command-line tool:
 
     $ dogsheep-beta index dogsheep.db config.yml
 
-The `config.yml` file contains details of the databases and tables that should be indexed:
+The `config.yml` file contains details of the databases and document types that should be indexed:
 
 ```yaml
 twitter.db:
@@ -55,7 +55,7 @@ You can pass other SQLite tokenize argumenst here, see [the SQLite FTS tokenizer
 
 The columns that can be returned by our query are:
 
-- `key` - a unique (within that table) primary key
+- `key` - a unique (within that type) primary key
 - `title` - the title for the item
 - `timestamp` - an ISO8601 timestamp, e.g. `2020-09-02T21:00:21`
 - `search_1` - a larger chunk of text to be included in the search index

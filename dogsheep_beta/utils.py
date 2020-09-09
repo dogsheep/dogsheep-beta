@@ -3,7 +3,7 @@ import sqlite_utils
 import yaml
 
 COLUMNS = {
-    "table": str,
+    "type": str,
     "key": str,
     "title": str,
     "timestamp": str,
@@ -33,18 +33,18 @@ def run_indexer(db_path, rules, tokenize="porter", databases=None):
     db.conn.close()
 
     # We connect to each database in turn and attach our index
-    for i, (db_name, table_rules) in enumerate(rules.items()):
+    for i, (db_name, type_rules) in enumerate(rules.items()):
         if databases and db_name not in databases:
             continue
         other_db = sqlite_utils.Database(db_name)
         other_db.conn.execute("ATTACH DATABASE '{}' AS index1".format(db_path))
-        for table, info in table_rules.items():
+        for type_, info in type_rules.items():
             # Execute SQL with limit 0 to figure out the columns
             sql = info["sql"]
             # Bit of a hack - we replace the starting `select ` with one
-            # that also includes the hard-coded table
+            # that also includes the hard-coded type
             sql_rest = sql.split("select", 1)[1]
-            sql = "select '{}/{}' as [table],{}".format(db_name, table, sql_rest)
+            sql = "select '{}/{}' as type,{}".format(db_name, type_, sql_rest)
             columns = derive_columns(other_db, sql)
             with other_db.conn:
                 other_db.conn.execute(
@@ -72,7 +72,7 @@ def ensure_table_and_indexes(db, tokenize):
     if not table.exists():
         table.create(
             COLUMNS,
-            pk=("table", "key"),
+            pk=("type", "key"),
             not_null=NOT_NULL,
             defaults=DEFAULTS,
         )

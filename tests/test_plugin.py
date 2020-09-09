@@ -44,18 +44,18 @@ async def test_search(ds):
         ]
         assert facets == [
             {
-                "name": "table",
+                "name": "type",
                 "values": [
                     {
                         "selected": False,
                         "count": 2,
-                        "url": "?table=emails.db%2Femails&q=things",
+                        "url": "?type=emails.db%2Femails&q=things",
                         "label": "emails.db/emails",
                     },
                     {
                         "selected": False,
                         "count": 1,
-                        "url": "?table=github.db%2Fcommits&q=things",
+                        "url": "?type=github.db%2Fcommits&q=things",
                         "label": "github.db/commits",
                     },
                 ],
@@ -239,7 +239,7 @@ def ds(tmp_path_factory, monkeypatch):
         ],
         pk="id",
     )
-    index.callback(beta_path, beta_config_path, None)
+    index.callback(beta_path, beta_config_path, None, [])
     ds = Datasette(
         [str(beta_path), str(github_path), str(emails_path)],
         metadata=parse_metadata(METADATA),

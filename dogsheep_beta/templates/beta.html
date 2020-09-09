@@ -74,7 +74,7 @@ pre, blockquote {
 
 <section class="results">
 {% for result in results %}
-    <div class="result" data-table-key="{{ result.table }}:{{ result.key }}">
+    <div class="result" data-table-key="{{ result.type }}:{{ result.key }}">
         {{ result.output|safe }}
     </div>
 {% endfor %}
