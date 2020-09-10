@@ -121,6 +121,7 @@ async def process_results(datasette, results, rules):
     for result in results:
         type_ = result["type"]
         meta = rules_by_type[type_]
+        result["display"] = {}
         if meta.get("display_sql"):
             db = datasette.get_database(type_.split(".")[0])
             display_results = await db.execute(
@@ -129,8 +130,6 @@ async def process_results(datasette, results, rules):
             first = display_results.first()
             if first:
                 result["display"] = dict(first)
-            else:
-                result["display"] = {}
         output = None
         if meta.get("display"):
             if type_ not in templates_by_type:
