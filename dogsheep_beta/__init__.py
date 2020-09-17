@@ -59,10 +59,14 @@ async def beta(request, datasette):
     other_sort_orders = []
     for sort_order in ("relevance", "newest", "oldest"):
         if sort_order != sorted_by:
-            other_sort_orders.append({
-                "label": sort_order,
-                "url": path_with_replaced_args(request, {"sort": sort_order}) if sort_order != "relevance" else path_with_removed_args(request, {"sort"})
-            })
+            other_sort_orders.append(
+                {
+                    "label": sort_order,
+                    "url": path_with_replaced_args(request, {"sort": sort_order})
+                    if sort_order != "relevance"
+                    else path_with_removed_args(request, {"sort"}),
+                }
+            )
     results = []
     facets = {}
     count = None
@@ -85,17 +89,19 @@ async def beta(request, datasette):
                 "results": results,
                 "facets": facets,
                 "hiddens": hiddens,
-                'sorted_by': sorted_by,
+                "sorted_by": sorted_by,
                 "other_sort_orders": other_sort_orders,
             },
             request=request,
         )
     )
 
+
 SORT_ORDERS = {
     "oldest": "search_index.timestamp",
     "newest": "search_index.timestamp desc",
 }
+
 
 async def search(datasette, database_name, request):
     from datasette.utils import sqlite3, escape_fts
@@ -107,9 +113,7 @@ async def search(datasette, database_name, request):
         default_sort = "search_index_fts.rank, search_index.timestamp desc"
     else:
         default_sort = "search_index.timestamp desc"
-    order_by = SORT_ORDERS.get(
-        request.args.get("sort"), default_sort
-    )
+    order_by = SORT_ORDERS.get(request.args.get("sort"), default_sort)
 
     params = {"query": q}
     where_clauses = []

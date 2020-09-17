@@ -126,16 +126,16 @@ async def test_advanced_search(ds, q, expected):
     (
         (
             "",
-            ['emails.db/emails:1', 'emails.db/emails:2'],
+            ["emails.db/emails:1", "emails.db/emails:2"],
         ),
         (
             "newest",
-            ['emails.db/emails:2', 'emails.db/emails:1'],
+            ["emails.db/emails:2", "emails.db/emails:1"],
         ),
         (
             "oldest",
-            ['emails.db/emails:1', 'emails.db/emails:2'],
-        )
+            ["emails.db/emails:1", "emails.db/emails:2"],
+        ),
     ),
 )
 async def test_search_order(ds, sort, expected):
@@ -149,11 +149,11 @@ async def test_search_order(ds, sort, expected):
         results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
         assert results == expected
         # Check that sort links exist and are correct
-        sort_label = sort or 'relevance'
-        assert '<strong>{}</strong>'.format(sort_label) in response.text
-        for sort_order in ('relevance', 'newest', 'oldest'):
+        sort_label = sort or "relevance"
+        assert "<strong>{}</strong>".format(sort_label) in response.text
+        for sort_order in ("relevance", "newest", "oldest"):
             if sort_order != sort_label:
-                assert '>{}</a>'.format(sort_order) in response.text
+                assert ">{}</a>".format(sort_order) in response.text
 
 
 @pytest.mark.asyncio
