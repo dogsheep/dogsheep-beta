@@ -156,6 +156,43 @@ async def test_search_order(ds, sort, expected):
                 assert ">{}</a>".format(sort_order) in response.text
 
 
+ALL_EXPECTED = [
+    "github.db/commits:5becbf70d64951e2910314ef5227d19b11c25b0c9586934941366da8997e57cb",
+    "emails.db/emails:2",
+    "github.db/commits:a5b39c5049b28997528bb0eca52730ab6febabeaba54cfcba0ab5d70e7207523",
+    "emails.db/emails:1",
+]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "sort,expected",
+    (
+        ("", ALL_EXPECTED),
+        ("newest", ALL_EXPECTED),
+        ("oldest", list(reversed(ALL_EXPECTED))),
+    ),
+)
+async def test_search_order_for_timeline(ds, sort, expected):
+    async with httpx.AsyncClient(app=ds.app()) as client:
+        url = "http://localhost/-/beta"
+        if sort:
+            url += "?sort=" + sort
+        response = await client.get(url)
+        assert response.status_code == 200
+        soup = Soup(response.text, "html5lib")
+        results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
+        assert results == expected
+        # Check that sort links exist and are correct
+        sort_label = sort or "newest"
+        assert "<strong>{}</strong>".format(sort_label) in response.text
+        assert ">relevance</a>" not in response.text
+        assert (
+            ">{}</a>".format("oldest" if sort_label == "newest" else "newest")
+            in response.text
+        )
+
+
 @pytest.mark.asyncio
 async def test_fixture(ds):
     async with httpx.AsyncClient(app=ds.app()) as client:

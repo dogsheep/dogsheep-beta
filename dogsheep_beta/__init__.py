@@ -42,6 +42,10 @@ order by
 limit 100
 """
 FILTER_COLS = ("type", "category", "is_public")
+SORT_ORDERS = {
+    "oldest": "search_index.timestamp",
+    "newest": "search_index.timestamp desc",
+}
 
 
 async def beta(request, datasette):
@@ -53,11 +57,13 @@ async def beta(request, datasette):
     dogsheep_beta_config_file = config["config_file"]
     rules = parse_metadata(open(dogsheep_beta_config_file).read())
     q = request.args.get("q") or ""
-    sorted_by = "relevance"
+    sorted_by = "relevance" if q else "newest"
     if request.args.get("sort") in SORT_ORDERS:
         sorted_by = request.args["sort"]
     other_sort_orders = []
     for sort_order in ("relevance", "newest", "oldest"):
+        if not q and sort_order == "relevance":
+            continue
         if sort_order != sorted_by:
             other_sort_orders.append(
                 {
@@ -95,12 +101,6 @@ async def beta(request, datasette):
             request=request,
         )
     )
-
-
-SORT_ORDERS = {
-    "oldest": "search_index.timestamp",
-    "newest": "search_index.timestamp desc",
-}
 
 
 async def search(datasette, database_name, request):
