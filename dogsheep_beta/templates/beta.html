@@ -46,7 +46,12 @@ pre, blockquote {
     {% endfor %}
 </div></form>
 
-{% if count %}<p>Got {{ intcomma(count) }} result{% if count != 1 %}s{% endif %}</p>{% endif %}
+<p>Got {{ intcomma(count) }} result{% if count != 1 %}s{% endif %}, sorted by
+    <strong>{{ sorted_by }}</strong> /
+    {% for other_sort_order in other_sort_orders %} 
+        <a href="{{ other_sort_order.url }}">{{ other_sort_order.label }}</a>{% if not loop.last %} / {% endif %}
+    {% endfor %}
+</p>
 
 <aside>
 {% if facets %}

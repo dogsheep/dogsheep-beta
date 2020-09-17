@@ -18,7 +18,7 @@ async def test_search(ds):
         response = await client.get("http://localhost/-/beta?q=things")
         assert 200 == response.status_code
         for fragment in (
-            "<p>Got 3 results</p>",
+            "<p>Got 3 results",
             "<p>Email from blah@example.com, subject Hey there",
             "<p>Email from blah@example.com, subject What's going on",
             "<p>Commit to dogsheep/dogsheep-beta on 2020-08-01T00:05:02",
@@ -118,6 +118,42 @@ async def test_advanced_search(ds, q, expected):
         assert results == expected
         # Check that facets exist on the page
         assert len(soup.select(".facet li")), "Could not see any facet results"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "sort,expected",
+    (
+        (
+            "",
+            ['emails.db/emails:1', 'emails.db/emails:2'],
+        ),
+        (
+            "newest",
+            ['emails.db/emails:2', 'emails.db/emails:1'],
+        ),
+        (
+            "oldest",
+            ['emails.db/emails:1', 'emails.db/emails:2'],
+        )
+    ),
+)
+async def test_search_order(ds, sort, expected):
+    async with httpx.AsyncClient(app=ds.app()) as client:
+        q = "email"
+        response = await client.get(
+            "http://localhost/-/beta?" + urllib.parse.urlencode({"q": q, "sort": sort})
+        )
+        assert response.status_code == 200
+        soup = Soup(response.text, "html5lib")
+        results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
+        assert results == expected
+        # Check that sort links exist and are correct
+        sort_label = sort or 'relevance'
+        assert '<strong>{}</strong>'.format(sort_label) in response.text
+        for sort_order in ('relevance', 'newest', 'oldest'):
+            if sort_order != sort_label:
+                assert '>{}</a>'.format(sort_order) in response.text
 
 
 @pytest.mark.asyncio

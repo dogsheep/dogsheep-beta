@@ -19,7 +19,7 @@ from
 {where}
   {where_clauses}
 order by
-  search_index.timestamp desc
+  {order_by}
 limit 40
 """
 
@@ -38,7 +38,7 @@ from
 {where}
   {where_clauses}
 order by
-  search_index_fts.rank, search_index.timestamp desc
+  {order_by}
 limit 100
 """
 FILTER_COLS = ("type", "category", "is_public")
@@ -46,12 +46,23 @@ FILTER_COLS = ("type", "category", "is_public")
 
 async def beta(request, datasette):
     from datasette.utils.asgi import Response
+    from datasette.utils import path_with_removed_args, path_with_replaced_args
 
     config = datasette.plugin_config("dogsheep-beta") or {}
     database_name = config.get("database") or datasette.get_database().name
     dogsheep_beta_config_file = config["config_file"]
     rules = parse_metadata(open(dogsheep_beta_config_file).read())
     q = request.args.get("q") or ""
+    sorted_by = "relevance"
+    if request.args.get("sort") in SORT_ORDERS:
+        sorted_by = request.args["sort"]
+    other_sort_orders = []
+    for sort_order in ("relevance", "newest", "oldest"):
+        if sort_order != sorted_by:
+            other_sort_orders.append({
+                "label": sort_order,
+                "url": path_with_replaced_args(request, {"sort": sort_order}) if sort_order != "relevance" else path_with_removed_args(request, {"sort"})
+            })
     results = []
     facets = {}
     count = None
@@ -74,17 +85,32 @@ async def beta(request, datasette):
                 "results": results,
                 "facets": facets,
                 "hiddens": hiddens,
+                'sorted_by': sorted_by,
+                "other_sort_orders": other_sort_orders,
             },
             request=request,
         )
     )
 
+SORT_ORDERS = {
+    "oldest": "search_index.timestamp",
+    "newest": "search_index.timestamp desc",
+}
 
 async def search(datasette, database_name, request):
     from datasette.utils import sqlite3, escape_fts
 
     database = datasette.get_database(database_name)
     q = request.args.get("q") or ""
+
+    if q:
+        default_sort = "search_index_fts.rank, search_index.timestamp desc"
+    else:
+        default_sort = "search_index.timestamp desc"
+    order_by = SORT_ORDERS.get(
+        request.args.get("sort"), default_sort
+    )
+
     params = {"query": q}
     where_clauses = []
     sql = TIMELINE_SQL
@@ -98,6 +124,7 @@ async def search(datasette, database_name, request):
     sql_to_execute = sql.format(
         where=" where " if where_clauses else "",
         where_clauses=" and ".join(where_clauses),
+        order_by=order_by,
     )
     try:
         results = await database.execute(sql_to_execute, params)
