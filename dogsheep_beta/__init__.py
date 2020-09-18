@@ -165,7 +165,7 @@ async def process_results(datasette, results, rules, template_debug=False):
         output = None
         if meta.get("display"):
             if type_ not in templates_by_type:
-                compiled = Template(meta["display"])
+                compiled = Template(meta["display"], autoescape=True)
                 templates_by_type[type_] = compiled
             try:
                 output = compiled.render(
