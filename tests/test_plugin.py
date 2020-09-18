@@ -20,7 +20,7 @@ async def test_search(ds):
         for fragment in (
             "<p>Got 3 results",
             "<p>Email from blah@example.com, subject Hey there",
-            "<p>Email from blah@example.com, subject What's going on",
+            "<p>Email from blah@example.com, subject What&#39;s going on",
             "<p>Commit to dogsheep/dogsheep-beta on 2020-08-01T00:05:02",
         ):
             assert fragment in response.text
