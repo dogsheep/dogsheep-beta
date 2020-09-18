@@ -168,9 +168,7 @@ async def process_results(datasette, results, rules, template_debug=False):
                 compiled = Template(meta["display"], autoescape=True)
                 templates_by_type[type_] = compiled
             try:
-                output = compiled.render(
-                    {**result, **{"json": json}}
-                )
+                output = compiled.render({**result, **{"json": json}})
             except Exception as e:
                 if not template_debug:
                     raise
