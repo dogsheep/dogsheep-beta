@@ -167,6 +167,8 @@ async def process_results(datasette, results, rules, template_debug=False):
             if type_ not in templates_by_type:
                 compiled = Template(meta["display"], autoescape=True)
                 templates_by_type[type_] = compiled
+            else:
+                compiled = templates_by_type[type_]
             try:
                 output = compiled.render({**result, **{"json": json}})
             except Exception as e:
