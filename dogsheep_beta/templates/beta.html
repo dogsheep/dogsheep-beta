@@ -40,6 +40,9 @@ pre, blockquote {
 
 <form action="/-/beta" method="get"><div>
     <input type="search" name="q" value="{{ q }}" id="q">
+    {% if sorted_by != "relevance" %}
+        <input type="hidden" name="sort" value="{{ sorted_by }}">
+    {% endif %}
     <input type="submit" value="Search">
     {% for hidden in hiddens %}
         <input type="hidden" name="{{ hidden.name }}" value="{{ hidden.value }}">

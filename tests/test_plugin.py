@@ -151,6 +151,11 @@ async def test_search_order(ds, sort, expected):
         # Check that sort links exist and are correct
         sort_label = sort or "relevance"
         assert "<strong>{}</strong>".format(sort_label) in response.text
+        if sort_label != "relevance":
+            assert (
+                '<input type="hidden" name="sort" value="{}">'.format(sort_label)
+                in response.text
+            )
         for sort_order in ("relevance", "newest", "oldest"):
             if sort_order != sort_label:
                 assert ">{}</a>".format(sort_order) in response.text
