@@ -55,6 +55,7 @@ async def beta(request, datasette):
     config = datasette.plugin_config("dogsheep-beta") or {}
     database_name = config.get("database") or datasette.get_database().name
     dogsheep_beta_config_file = config["config_file"]
+    template_debug = bool(config.get("template_debug"))
     rules = parse_metadata(open(dogsheep_beta_config_file).read())
     q = request.args.get("q") or ""
     sorted_by = "relevance" if q else "newest"
@@ -79,7 +80,7 @@ async def beta(request, datasette):
 
     results = await search(datasette, database_name, request)
     count, facets = await get_count_and_facets(datasette, database_name, request)
-    await process_results(datasette, results, rules)
+    await process_results(datasette, results, rules, template_debug)
 
     hiddens = [
         {"name": column, "value": request.args[column]}
@@ -141,7 +142,7 @@ async def search(datasette, database_name, request):
     return [dict(r) for r in results.rows]
 
 
-async def process_results(datasette, results, rules):
+async def process_results(datasette, results, rules, template_debug=False):
     # Adds a 'display' property with HTML to the results
     templates_by_type = {}
     rules_by_type = {}
@@ -166,7 +167,18 @@ async def process_results(datasette, results, rules):
             if type_ not in templates_by_type:
                 compiled = Template(meta["display"])
                 templates_by_type[type_] = compiled
-            output = compiled.render({**result, **{"json": json}})
+            try:
+                output = compiled.render(
+                    {**result, **{"json": json}}
+                )
+            except Exception as e:
+                if not template_debug:
+                    raise
+                output = '<p style="color: red">{}</p><pre>{}</pre><p>Template:</p><pre>{}</pre>'.format(
+                    html.escape(str(e)),
+                    html.escape(json.dumps(result, default=repr, indent=4)),
+                    html.escape(meta["display"]),
+                )
         else:
             output = "<pre>{}</pre>".format(
                 html.escape(json.dumps(result, default=repr, indent=4))

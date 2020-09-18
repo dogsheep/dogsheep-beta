@@ -80,6 +80,30 @@ Indexed items can be assigned a category. Categories are integers that correspon
 
 `received` is for items that have been specifically sent to them by other people - incoming emails or direct messages for example.
 
+## Datasette plugin
+
+Run `datasette install dogsheep-beta` (or use `pip install dogsheep-beta` in the same environment as Datasette) to install the Dogsheep Beta Datasette plugin.
+
+Once installed, a custom search interface will be made available at `/-/beta`. You can use this interface to execute searches.
+
+The Datasette plugin has some configuration options. You can set these by adding the following to your `metadata.json` configuration file:
+
+```json
+{
+    "plugins": {
+        "dogsheep-beta": {
+            "database": "beta",
+            "config_file": "dogsheep-beta.yml",
+            "template_debug": true
+        }
+    }
+}
+```
+The configuration settings for the plugin are:
+- `database` - the database file that contains your search index. If the file is `beta.db` you should set `database` to `beta`.
+- `config_file` - the YAML file containing your Dogsheep Beta configuration.
+- `template_debug` - set this to `true` to enable debugging output if errors occur in your custom templates, see below.
+
 ## Custom results display
 
 Each indexed item type can define custom display HTML as part of the `config.yml` file. It can do this using a `display` key containing a fragment of Jinja template, and optionally a `display_sql` key with extra SQL to execute to fetch the data to display.
@@ -130,6 +154,8 @@ twitter.db:
 The `display_sql` query will be executed for every search result, passing the key value from the `search_index` table as the `:key` parameter.
 
 This performs well because [many small queries are efficient in SQLite](https://www.sqlite.org/np1queryprob.html).
+
+If an error occurs while rendering one of your templates the search results page will return a 500 error. You can use the `template_debug` configuration setting described above to instead output debugging information for the search results item that experienced the error.
 
 ## Displaying maps
 
