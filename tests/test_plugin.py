@@ -88,6 +88,23 @@ async def test_search(ds):
                     },
                 ],
             },
+            {
+                "name": "timestamp",
+                "values": [
+                    {
+                        "selected": False,
+                        "count": 2,
+                        "url": "?timestamp__date=2020-08-01&q=things",
+                        "label": "2020-08-01",
+                    },
+                    {
+                        "selected": False,
+                        "count": 1,
+                        "url": "?timestamp__date=2020-08-02&q=things",
+                        "label": "2020-08-02",
+                    },
+                ],
+            },
         ]
 
 

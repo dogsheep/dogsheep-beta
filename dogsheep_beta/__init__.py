@@ -118,6 +118,9 @@ async def search(datasette, database_name, request):
 
     params = {"query": q}
     where_clauses = []
+    if request.args.get("timestamp__date"):
+        where_clauses.append('date("timestamp") = :date')
+        params["date"] = request.args["timestamp__date"]
     sql = TIMELINE_SQL
     if q:
         sql = SEARCH_SQL
@@ -192,16 +195,20 @@ async def get_count_and_facets(datasette, database_name, request):
     from datasette.utils import sqlite3, escape_fts
 
     q = request.args.get("q") or ""
+    timestamp__date = request.args.get("timestamp__date") or ""
 
     async def execute_search(searchmode_raw):
         args = {
             "_facet": ["type", "category", "is_public"],
+            "_facet_date": ["timestamp"],
             "_size": 0,
         }
         if q:
             args["_search"] = q
             if searchmode_raw:
                 args["_searchmode"] = "raw"
+        if timestamp__date:
+            args["timestamp__date"] = timestamp__date
         for column in FILTER_COLS:
             if column in request.args:
                 args[column] = request.args[column]
