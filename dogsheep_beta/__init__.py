@@ -48,6 +48,10 @@ SORT_ORDERS = {
 }
 
 
+class InnerResponseError(Exception):
+    pass
+
+
 async def beta(request, datasette):
     from datasette.utils.asgi import Response
     from datasette.utils import path_with_removed_args, path_with_replaced_args
@@ -190,7 +194,6 @@ async def process_results(datasette, results, rules, template_debug=False):
 
 
 async def get_count_and_facets(datasette, database_name, request):
-    from datasette.views.table import TableView
     from datasette.utils.asgi import Request, Response
     from datasette.utils import sqlite3, escape_fts
 
@@ -220,25 +223,19 @@ async def get_count_and_facets(datasette, database_name, request):
                 doseq=True,
             ),
         )
-        inner_request = Request.fake(path_with_query_string)
-        view = TableView(datasette)
-        data, _, _ = await view.data(
-            inner_request,
-            database=database_name,
-            hash=None,
-            table="search_index",
-            _next=None,
+        inner_response = await datasette.client.get(
+            path_with_query_string, cookies=request.cookies
         )
+        if inner_response.status_code != 200:
+            raise InnerResponseError(inner_response.status_code)
+        data = inner_response.json()
         count, facets = data["filtered_table_rows_count"], data["facet_results"]
         return count, facets
 
     try:
         count, facets = await execute_search(True)
-    except sqlite3.OperationalError as e:
-        if "fts5" in str(e):
-            count, facets = await execute_search(False)
-        else:
-            raise
+    except InnerResponseError as e:
+        count, facets = await execute_search(False)
 
     facets = facets.values()
     # Rewrite toggle_url on facet_results
