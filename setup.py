@@ -32,7 +32,7 @@ setup(
         "datasette": ["beta = dogsheep_beta"],
         "console_scripts": ["dogsheep-beta = dogsheep_beta.cli:cli"],
     },
-    install_requires=["datasette>=0.50.2", "click", "PyYAML", "sqlite-utils"],
+    install_requires=["datasette>=0.50.2", "click", "PyYAML", "sqlite-utils>=3.0"],
     extras_require={
         "test": ["pytest", "pytest-asyncio", "httpx", "beautifulsoup4", "html5lib"]
     },

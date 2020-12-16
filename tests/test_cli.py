@@ -102,20 +102,21 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
     assert indexes == [["is_public"], ["category"], ["timestamp"], ["type", "key"]]
 
     # Test that search works, with porter stemming
-    results = beta_db["search_index"].search("run")
+    results = list(beta_db["search_index"].search("run"))
     if use_porter:
         assert results == [
-            (
-                "dogs.db/dogs",
-                "1",
-                "Cleo",
-                "2020-08-22 04:41:33",
-                1,
-                0,
-                "running",
-                None,
-                None,
-            )
+            {
+                "rowid": 1,
+                "type": "dogs.db/dogs",
+                "key": "1",
+                "title": "Cleo",
+                "timestamp": "2020-08-22 04:41:33",
+                "category": 1,
+                "is_public": 0,
+                "search_1": "running",
+                "search_2": None,
+                "search_3": None,
+            }
         ]
     else:
         assert results == []
