@@ -84,7 +84,7 @@ async def beta(request, datasette):
 
     results = await search(datasette, database_name, request)
     count, facets = await get_count_and_facets(datasette, database_name, request)
-    await process_results(datasette, results, rules, template_debug)
+    await process_results(datasette, results, rules, q, template_debug)
 
     hiddens = [
         {"name": column, "value": request.args[column]}
@@ -149,7 +149,7 @@ async def search(datasette, database_name, request):
     return [dict(r) for r in results.rows]
 
 
-async def process_results(datasette, results, rules, template_debug=False):
+async def process_results(datasette, results, rules, q, template_debug=False):
     # Adds a 'display' property with HTML to the results
     templates_by_type = {}
     rules_by_type = {}
@@ -164,7 +164,7 @@ async def process_results(datasette, results, rules, template_debug=False):
         if meta.get("display_sql"):
             db = datasette.get_database(type_.split(".")[0])
             display_results = await db.execute(
-                meta["display_sql"], {"key": result["key"]}
+                meta["display_sql"], {"key": result["key"], "q": q}
             )
             first = display_results.first()
             if first:

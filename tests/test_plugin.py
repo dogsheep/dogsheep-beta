@@ -22,6 +22,7 @@ async def test_search(ds):
             "<p>Email from blah@example.com, subject Hey there",
             "<p>Email from blah@example.com, subject What&#39;s going on",
             "<p>Commit to dogsheep/dogsheep-beta on 2020-08-01T00:05:02",
+            '<p>User searched for: "things"</p>',
         ):
             assert fragment in response.text
         # Test facets
@@ -267,11 +268,13 @@ def ds(tmp_path_factory, monkeypatch):
                     commits.sha,
                     commits.message,
                     commits.committer_date,
-                    commits.repo_name
+                    commits.repo_name,
+                    :q as their_query
                 from commits where sha = :key
             display: |-
                 <p>Commit to {{ display.repo_name }} on {{ display.committer_date }}</p>
                 <p>{{ display.message }} - {{ display.sha }}</p>
+                <p>User searched for: "{{ display.their_query }}"</p>
             sql: |-
                 select
                     sha as key,

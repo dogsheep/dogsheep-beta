@@ -151,7 +151,7 @@ twitter.db:
             <p>{{ display.screen_name }} - tweeted at {{ display.created_at }}</p>
             <blockquote>{{ display.full_text }}</blockquote>
 ```
-The `display_sql` query will be executed for every search result, passing the key value from the `search_index` table as the `:key` parameter.
+The `display_sql` query will be executed for every search result, passing the key value from the `search_index` table as the `:key` parameter and the user's search term as the `:q` parameter.
 
 This performs well because [many small queries are efficient in SQLite](https://www.sqlite.org/np1queryprob.html).
 
