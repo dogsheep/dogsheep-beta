@@ -14,7 +14,7 @@ def get_long_description():
 
 setup(
     name="dogsheep-beta",
-    description="Dogsheep search index",
+    description="Build a search index across content from multiple SQLite database tables and run faceted searches against it using Datasette",
     long_description=get_long_description(),
     long_description_content_type="text/markdown",
     author="Simon Willison",
