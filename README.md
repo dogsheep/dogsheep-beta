@@ -5,7 +5,11 @@
 [![Tests](https://github.com/dogsheep/beta/workflows/Test/badge.svg)](https://github.com/dogsheep/beta/actions?query=workflow%3ATest)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/dogsheep/beta/blob/main/LICENSE)
 
-Dogsheep search index
+Build a search index across content from multiple SQLite database tables and run faceted searches against it using Datasette
+
+## Demo
+
+A live demo of this plugin is running at https://datasette.io/-/beta - configured using [this YAML file](https://github.com/simonw/datasette.io/blob/main/templates/dogsheep-beta.yml).
 
 ## Installation
 
