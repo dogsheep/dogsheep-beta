@@ -7,9 +7,11 @@
 
 Build a search index across content from multiple SQLite database tables and run faceted searches against it using Datasette
 
-## Demo
+## Example
 
-A live demo of this plugin is running at https://datasette.io/-/beta - configured using [this YAML file](https://github.com/simonw/datasette.io/blob/main/templates/dogsheep-beta.yml).
+A live example of this plugin is running at https://datasette.io/-/beta - configured using [this YAML file](https://github.com/simonw/datasette.io/blob/main/templates/dogsheep-beta.yml).
+
+Read more about how this example works in [Building a search engine for datasette.io](https://simonwillison.net/2020/Dec/19/dogsheep-beta/).
 
 ## Installation
 
