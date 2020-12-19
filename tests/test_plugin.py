@@ -123,6 +123,10 @@ async def test_search(ds):
             "#dogfest",
             ["emails.db/emails:1"],
         ),
+        (
+            "github-to-sqlite",
+            [],
+        ),
     ),
 )
 async def test_advanced_search(ds, q, expected):
@@ -134,8 +138,9 @@ async def test_advanced_search(ds, q, expected):
         soup = Soup(response.text, "html5lib")
         results = [el["data-table-key"] for el in soup.select("[data-table-key]")]
         assert results == expected
-        # Check that facets exist on the page
-        assert len(soup.select(".facet li")), "Could not see any facet results"
+        if expected:
+            # Check that facets exist on the page
+            assert len(soup.select(".facet li")), "Could not see any facet results"
 
 
 @pytest.mark.asyncio

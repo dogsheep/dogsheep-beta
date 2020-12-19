@@ -128,7 +128,7 @@ async def search(datasette, database_name, request):
     sql = TIMELINE_SQL
     if q:
         sql = SEARCH_SQL
-        where_clauses.append("search_index_fts match :query ")
+        where_clauses.append("search_index_fts match :query")
     for arg in FILTER_COLS:
         if arg in request.args:
             where_clauses.append("[{arg}]=:{arg}".format(arg=arg))
@@ -141,11 +141,8 @@ async def search(datasette, database_name, request):
     try:
         results = await database.execute(sql_to_execute, params)
     except sqlite3.OperationalError as e:
-        if "fts5" in str(e):
-            params["query"] = escape_fts(params["query"])
-            results = await database.execute(sql_to_execute, params)
-        else:
-            raise
+        params["query"] = escape_fts(params["query"])
+        results = await database.execute(sql_to_execute, params)
     return [dict(r) for r in results.rows]
 
 
