@@ -109,10 +109,20 @@ async def test_search(ds):
         ]
 
 
+all_results = [
+    "github.db/commits:5becbf70d64951e2910314ef5227d19b11c25b0c9586934941366da8997e57cb",
+    "emails.db/emails:2",
+    "github.db/commits:a5b39c5049b28997528bb0eca52730ab6febabeaba54cfcba0ab5d70e7207523",
+    "emails.db/emails:1",
+]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "q,expected",
     (
+        ("", all_results),
+        (" ", all_results),
         (
             "things NOT email",
             [

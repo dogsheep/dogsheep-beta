@@ -61,7 +61,7 @@ async def beta(request, datasette):
     dogsheep_beta_config_file = config["config_file"]
     template_debug = bool(config.get("template_debug"))
     rules = parse_metadata(open(dogsheep_beta_config_file).read())
-    q = request.args.get("q") or ""
+    q = (request.args.get("q") or "").strip()
     sorted_by = "relevance" if q else "newest"
     if request.args.get("sort") in SORT_ORDERS:
         sorted_by = request.args["sort"]
@@ -112,7 +112,7 @@ async def search(datasette, database_name, request):
     from datasette.utils import sqlite3, escape_fts
 
     database = datasette.get_database(database_name)
-    q = request.args.get("q") or ""
+    q = (request.args.get("q") or "").strip()
 
     if q:
         default_sort = "search_index_fts.rank, search_index.timestamp desc"
@@ -194,7 +194,7 @@ async def get_count_and_facets(datasette, database_name, request):
     from datasette.utils.asgi import Request, Response
     from datasette.utils import sqlite3, escape_fts
 
-    q = request.args.get("q") or ""
+    q = (request.args.get("q") or "").strip()
     timestamp__date = request.args.get("timestamp__date") or ""
 
     async def execute_search(searchmode_raw):
