@@ -38,7 +38,7 @@ pre, blockquote {
 </style>
 <h1>Dogsheep Beta{% if q %}: {{ q }}{% endif %}</h1>
 
-<form action="/-/beta" method="get"><div>
+<form action="{{ base_url }}-/beta" method="get"><div>
     <input type="search" name="q" value="{{ q }}" id="q">
     {% if sorted_by != "relevance" %}
         <input type="hidden" name="sort" value="{{ sorted_by }}">

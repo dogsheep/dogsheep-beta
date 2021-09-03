@@ -213,13 +213,13 @@ async def get_count_and_facets(datasette, database_name, request):
             if column in request.args:
                 args[column] = request.args[column]
 
-        path_with_query_string = "/{}/search_index.json?{}".format(
+        path_with_query_string = datasette.urls.path("/{}/search_index.json?{}".format(
             database_name,
             urllib.parse.urlencode(
                 args,
                 doseq=True,
             ),
-        )
+        ))
         inner_response = await datasette.client.get(
             path_with_query_string, cookies=request.cookies
         )
