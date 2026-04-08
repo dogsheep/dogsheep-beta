@@ -180,20 +180,14 @@ JavaScript on the page will look for any elements with `data-map-latitude` and `
 
 ## Development
 
-To set up this plugin locally, first checkout the code. Then create a new virtual environment:
-
-    cd dogsheep-beta
-    python3 -mvenv venv
-    source venv/bin/activate
-
-Or if you are using `pipenv`:
-
-    pipenv shell
-
-Now install the dependencies and tests:
-
-    pip install -e '.[test]'
-
 To run the tests:
 
-    pytest
+    uv run pytest
+
+To run tests against Datasette pre-1.0:
+
+    uv run --with 'datasette<1.0' pytest
+
+To run tests against Datasette 1.0 and higher:
+
+    uv run --with 'datasette>=1.0a26' pytest

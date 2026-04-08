@@ -201,6 +201,7 @@ async def get_count_and_facets(datasette, database_name, request):
         args = {
             "_facet": ["type", "category", "is_public"],
             "_facet_date": ["timestamp"],
+            "_extra": "count",
             "_size": 0,
         }
         if q:
@@ -226,7 +227,15 @@ async def get_count_and_facets(datasette, database_name, request):
         if inner_response.status_code != 200:
             raise InnerResponseError(inner_response.status_code)
         data = inner_response.json()
-        count, facets = data["filtered_table_rows_count"], data["facet_results"]
+        facet_results = data["facet_results"]
+        # Datasette >= 1.0 nests facets under "results"
+        if "results" in facet_results and "timed_out" in facet_results:
+            facets = facet_results["results"]
+        else:
+            facets = facet_results
+        # Datasette < 1.0 uses filtered_table_rows_count,
+        # >= 1.0 uses count (via _extra=count)
+        count = data.get("filtered_table_rows_count") or data.get("count") or 0
         return count, facets
 
     try:

@@ -98,8 +98,8 @@ def test_basic(tmp_path_factory, monkeypatch, use_porter):
             "search_3": None,
         },
     ]
-    indexes = [i.columns for i in beta_db["search_index"].indexes]
-    assert indexes == [["is_public"], ["category"], ["timestamp"], ["type", "key"]]
+    indexes = sorted([i.columns for i in beta_db["search_index"].indexes])
+    assert indexes == sorted([["is_public"], ["category"], ["timestamp"], ["type", "key"]])
 
     # Test that search works, with porter stemming
     results = list(beta_db["search_index"].search("run"))

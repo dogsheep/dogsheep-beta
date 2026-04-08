@@ -54,9 +54,13 @@ def run_indexer(db_path, rules, tokenize="porter", databases=None):
                 )
         other_db.conn.close()
 
-    # Run optimize
+    # Rebuild FTS index (triggers don't fire for cross-database inserts)
+    # and optimize
     db = sqlite_utils.Database(db_path)
     with db.conn:
+        db.conn.execute(
+            'INSERT INTO search_index_fts(search_index_fts) VALUES ("rebuild")'
+        )
         db["search_index"].optimize()
     db.vacuum()
 

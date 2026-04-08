@@ -8,22 +8,19 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        datasette-version: ["<1.0", ">=1.0a26"]
     steps:
     - uses: actions/checkout@v6
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
-    - uses: actions/cache@v5
-      name: Configure pip caching
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        cache: pip
+        cache-dependency-path: pyproject.toml
     - name: Install dependencies
       run: |
         pip install . --group dev
+        pip install "datasette${{ matrix.datasette-version }}"
     - name: Run tests
       run: |
-        pytest -v
+        pytest
