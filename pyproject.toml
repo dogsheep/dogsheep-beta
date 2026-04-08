@@ -1,0 +1,41 @@
+[project]
+name = "dogsheep-beta"
+version = "0.10.2"
+description = "Build a search index across content from multiple SQLite database tables and run faceted searches against it using Datasette"
+readme = "README.md"
+authors = [{name = "Simon Willison"}]
+requires-python = ">=3.10"
+license = "Apache-2.0"
+dependencies = [
+    "datasette>=0.50.2",
+    "click",
+    "PyYAML",
+    "sqlite-utils>=3.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/dogsheep/beta"
+Issues = "https://github.com/dogsheep/beta/issues"
+CI = "https://github.com/dogsheep/beta/actions"
+Changelog = "https://github.com/dogsheep/beta/releases"
+
+[project.scripts]
+dogsheep-beta = "dogsheep_beta.cli:cli"
+
+[project.entry-points.datasette]
+beta = "dogsheep_beta"
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "beautifulsoup4",
+    "html5lib",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.18,<0.12.0"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-root = ""

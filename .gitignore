@@ -11,3 +11,4 @@ venv
 .vscode
 *.db
 config.yml
+uv.lock
